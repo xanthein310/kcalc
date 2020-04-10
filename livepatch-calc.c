@@ -28,6 +28,55 @@ int livepatch_nop(struct expr_func *f, vec_expr_t args, void *c)
     return 0;
 }
 
+void livepatch_fib_cleanup(struct expr_func *f, void *c)
+{
+    /* suppress compilation warnings */
+    (void) f;
+    (void) c;
+}
+
+int livepatch_fib(struct expr_func *f, vec_expr_t args, void *c)
+{
+    (void) c;
+    if (vec_len(&args) == 1) {
+        int k = expr_eval(&vec_nth(&args, 0)) >> 4;
+
+        printk("args = %d\n", expr_eval(&vec_nth(&args, 0)));
+
+        int count = 0;
+        int temp_k = k;
+
+        if (k == 0)
+            return 0;
+        int fn = 0;
+        int fn1 = 1;
+
+        while ((temp_k & 0x80000000) == 0) {
+            count++;
+            temp_k <<= 1;
+        }
+
+        k = k << count;
+        for (count = 32 - count; count > 0; count--) {
+            int f2n1 = fn1 * fn1 + fn * fn;
+            int f2n = fn * (2 * fn1 - fn);
+            if (k & 0x80000000) {
+                fn = f2n1;
+                fn1 = f2n + f2n1;
+            } else {
+                fn = f2n;
+                fn1 = f2n1;
+            }
+            k <<= 1;
+        }
+
+        return fn << 4;
+    }
+
+    return 0;
+}
+
+
 /* clang-format off */
 static struct klp_func funcs[] = {
     {
@@ -37,6 +86,14 @@ static struct klp_func funcs[] = {
     {
         .old_name = "user_func_nop_cleanup",
         .new_func = livepatch_nop_cleanup,
+    },
+    {
+        .old_name = "user_func_fib",
+        .new_func = livepatch_fib,
+    },
+    {
+        .old_name = "user_func_fib_cleanup",
+        .new_func = livepatch_fib_cleanup,
     },
     {},
 };

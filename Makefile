@@ -1,8 +1,9 @@
 KDIR=/lib/modules/$(shell uname -r)/build
 
 obj-m += calc.o
-obj-m += livepatch-calc.o
+obj-m += livepatch_calc.o
 calc-objs += main.o expression.o
+livepatch_calc-objs += livepatch-calc.o expression.o
 ccflags-y := -std=gnu99 -Wno-declaration-after-statement
 
 GIT_HOOKS := .git/hooks/applied
