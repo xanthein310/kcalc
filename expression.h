@@ -35,9 +35,13 @@ extern "C" {
 #define vec_peek(v) (v)->buf[(v)->len - 1]
 #define vec_pop(v) (v)->buf[--(v)->len]
 #ifdef __KERNEL__
-#define vec_free(v) (kfree((v)->buf), (v)->buf = NULL, (v)->len = (v)->cap = 0)
+#define vec_free(v) \
+    if ((v)->buf)   \
+    (kfree((v)->buf), (v)->buf = NULL, (v)->len = (v)->cap = 0)
 #else
-#define vec_free(v) (free((v)->buf), (v)->buf = NULL, (v)->len = (v)->cap = 0)
+#define vec_free(v) \
+    if ((v)->buf)   \
+    (free((v)->buf), (v)->buf = NULL, (v)->len = (v)->cap = 0)
 #endif
 #define vec_foreach(v, var, iter)                                              \
     if ((v)->len > 0)                                                          \
